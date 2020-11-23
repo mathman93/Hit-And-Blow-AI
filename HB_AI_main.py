@@ -58,7 +58,7 @@ def check_attempt(attempt, the_sol):
 # Game Setup - Create all possible solutions
 colors6 = "cgprwy" # 6 colors for the game (cyan, green, pink, red, white, yellow)
 colors7 = "cgprwyk" # Adds the color black
-colors8 = "cgprwykm" # Adds the color magenta
+colors8 = "cgprwyko" # Adds the color orange
 while True:
 	try:
 		lvl = int(input("Choose a difficulty level (1-6): "))
