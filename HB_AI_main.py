@@ -16,7 +16,7 @@ def get_attempt(num, all_sol):
 	while True:
 		try:
 			# Get user attempt
-			attempt = list(input("Guess #{0}: ".format(num)).lower())
+			attempt = input("Guess #{0}: ".format(num)).lower()
 			# Data validation
 			if len(attempt) != 4: # If guess is not the right length...
 				print("Attempt must be 4 colors. Try again.")
@@ -36,7 +36,7 @@ def check_attempt(attempt, the_sol):
 	# Check attempt - Determine hits and blows
 	h = 0
 	b = 0
-	sol_copy = the_sol[:] # Copy for use in function
+	sol_copy = list(the_sol) # Copy for use in function
 	hit_check = [] # list of indices of colors marked as a hit
 	# First, find hits
 	for i in range(4):
@@ -59,17 +59,20 @@ def check_attempt(attempt, the_sol):
 colors6 = "cgprwy" # 6 colors for the game (cyan, green, pink, red, white, yellow)
 colors7 = "cgprwyk" # Adds the color black
 colors8 = "cgprwyko" # Adds the color orange
+numbers = "0123456789" # Make it really abstract with numbers.
 while True:
 	try:
-		lvl = int(input("Choose a difficulty level (1-6): "))
-		if lvl > 6 or lvl < 0:
+		lvl = int(input("Choose a difficulty level (1-8): "))
+		if lvl > 8 or lvl < 0:
 			print("Not a valid difficulty level. Try again.")
 			continue
 		# End if
 		if lvl == 0: # Reserved for computer playing itself.
 			print("It's a secret to everyone.")
 		# End if
-		if lvl > 4: # (5 & 6)
+		if lvl > 6: # (7 & 8)
+			colors = numbers # Use decimal symbols
+		elif lvl > 4: # (5 & 6)
 			colors = colors8 # Use even more colors
 		elif lvl > 2: # (3 & 4)
 			colors = colors7 # Use more colors
@@ -91,8 +94,8 @@ while True:
 # Create list object from all solutions
 all_solutions_list = []
 for sol in all_solutions:
-	all_solutions_list.append(list(sol))
-	#print(list(sol)) # Include for debugging
+	all_solutions_list.append("".join(x for x in list(sol)))
+	#print("".join(x for x in list(sol))) # Include for debugging
 #print(len(all_solutions_list)) # Include for debugging
 possible_solutions = all_solutions_list[:] # Copy available solutions
 
@@ -109,8 +112,7 @@ attmpt_num = 1 # Initialize attempt number for first guess
 while True:
 	if attmpt_num > 8:
 		print("Too many guesses. Sorry.")
-		sol_str = ""
-		print("Actual solution: {0}".format(sol_str.join(the_solution)))
+		print("Actual solution: {0}".format("".join(the_solution)))
 		break
 	attempt = get_attempt(attmpt_num, all_solutions_list)
 	[hits,blows] = check_attempt(attempt, the_solution)
@@ -131,7 +133,7 @@ while True:
 	# Include for assistance
 	#print("Possible solutions left: {0}".format(len(possible_solutions)))
 	#if len(possible_solutions) < 11:
-	#	print(possible_solutions)
+	#	print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
 	
 	# Continue to next attempt
 	attmpt_num += 1
