@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "task-HB_AI_main",
+      "appliesTo": "HB_AI_main.py",
+      "type": "launch"
+    }
+  ]
+}

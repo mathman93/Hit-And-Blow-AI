@@ -3,7 +3,7 @@ A simple AI for playing Hit & Blow (Mastermind).
 Basic Idea: Create all possible solutions, and use attempts to
 reduce possible solutions down to just one.
 To Do:
-	- Create game options at start
+	- Create game options at start (assist mode)
 	- Create player option to play again
 	- Have AI pick randomly from possible solutions
 By: Timothy Anglea
@@ -16,19 +16,21 @@ def get_attempt(num, all_sol):
 	while True:
 		try:
 			# Get user attempt
-			attempt = input("Guess #{0}: ".format(num)).lower()
+			attempt = input("Guess #{0}: ".format(num)).lower() # String of lowercase letters
 			# Data validation
 			if len(attempt) != 4: # If guess is not the right length...
 				print("Attempt must be 4 colors. Try again.")
 				continue
-			if attempt not in all_sol:
+			# End if
+			if attempt not in all_sol: # Only guess possible solutions
 				print("Not a valid attempt. Try again.")
 				continue
+			# End if
 			break
-		except ValueError:
+		except ValueError: # Probably won't see this.
 			print("Not a valid attempt. Please try again.")
 			continue
-	
+	# End while
 	#print(attempt) # Include for debugging
 	return attempt
 
@@ -37,74 +39,89 @@ def check_attempt(attempt, the_sol):
 	h = 0
 	b = 0
 	sol_copy = list(the_sol) # Copy for use in function
-	hit_check = [] # list of indices of colors marked as a hit
-	# First, find hits
-	for i in range(4):
-		if attempt[i] == sol_copy[i]:
+	hit_check = []
+	for i in range(4): # Iterate over the attempt
+		# First, find hits.
+		if attempt[i] == sol_copy[i]: # If attempt and solution match...
 			h += 1 # Attempt matches solution at position i
 			sol_copy[i] = " " # Clear solution color; it's been accounted for
-			hit_check.append(i) # add color at index i to checked list
-	# Then, find blows
-	for i1 in range(4): #iterate over attempt
+			hit_check.append(i)
+			continue # Continue to next position
+		# End if
+	# End for
+	# Then, find blows.
+	for i1 in range(4): #Iterate over the attempt
 		if i1 in hit_check:
-			continue # Already counted that one as a hit
-		for i2 in range(4): #iterate over solution
+			continue
+		for i2 in range(4): #Iterate over the solution
 			if attempt[i1] == sol_copy[i2]: # if the color is in the solution
-				b += 1
+				b += 1 # Attempt matches a color in the solution
 				sol_copy[i2] = " " # Clear solution color; it's been accounted for
-				break # end iteration over solution; continue to next attempt color
+				break # End iteration over solution; continue to next attempt color
+			# End if
+		# End for
+	# End for
 	return [h, b]
 
-# Game Setup - Create all possible solutions
-colors6 = "cgprwy" # 6 colors for the game (cyan, green, pink, red, white, yellow)
-colors7 = "cgprwyk" # Adds the color black
-colors8 = "cgprwyko" # Adds the color orange
-numbers = "0123456789" # Make it really abstract with numbers.
-while True:
-	try:
-		lvl = int(input("Choose a difficulty level (1-8): "))
-		if lvl > 8 or lvl < 0:
-			print("Not a valid difficulty level. Try again.")
+def get_level():
+	c6 = "cgprwy" # 6 colors for the game (cyan, green, pink, red, white, yellow)
+	c7 = "cgprwyk" # Adds the color black
+	c8 = "cgprwyko" # Adds the color orange
+	nums = "0123456789" # Make it really abstract with numbers.
+	while True:
+		try:
+			lvl = int(input("Choose a difficulty level (1-8): "))
+			if lvl > 8 or lvl < 0:
+				print("Not a valid difficulty level. Try again.")
+				continue
+			# End if
+			if lvl == 0: # Reserved for computer playing itself.
+				print("It's a secret to everyone.")
+			# End if
+			if lvl > 6: # (7 & 8)
+				clrs = nums # Use decimal symbols
+			elif lvl > 4: # (5 & 6)
+				clrs = c8 # Use even more colors
+			elif lvl > 2: # (3 & 4)
+				clrs = c7 # Use more colors
+			else: # (1 & 2)
+				clrs = c6 # Use standard colors
+			# End if
+			break # Continue; game parameters are set
+		except ValueError:
+			print("Not a valid difficulty level. Please select a number.")
 			continue
-		# End if
-		if lvl == 0: # Reserved for computer playing itself.
-			print("It's a secret to everyone.")
-		# End if
-		if lvl > 6: # (7 & 8)
-			colors = numbers # Use decimal symbols
-		elif lvl > 4: # (5 & 6)
-			colors = colors8 # Use even more colors
-		elif lvl > 2: # (3 & 4)
-			colors = colors7 # Use more colors
-		else: # (1 & 2)
-			colors = colors6 # Use standard colors
-		# End if
-		if lvl % 2 == 0: # (2 & 4)
-			# Use all possible combinations of colors
-			all_solutions = itertools.product(colors, repeat=4)
-		else: # (1 & 3)
-			# Use only permutations with unique colors
-			all_solutions = itertools.permutations(colors, 4) 
-		# End if
-		break # Continue; game parameters are set
-	except ValueError:
-		print("Not a valid difficulty level. Please select a number.")
-		continue
+	# End while
+	return [lvl, clrs]
 
-# Create list object from all solutions
-all_solutions_list = []
-for sol in all_solutions:
-	all_solutions_list.append("".join(x for x in list(sol)))
-	#print("".join(x for x in list(sol))) # Include for debugging
-#print(len(all_solutions_list)) # Include for debugging
-possible_solutions = all_solutions_list[:] # Copy available solutions
+def get_solutions(lvl, clrs):
+	if lvl % 2 == 0: # (2, 4, 6, & 8)
+		# Use all possible combinations of colors
+		all_sols = itertools.product(clrs, repeat=4)
+	else: # (1, 3, 5, & 7)
+		# Use only permutations with unique colors
+		all_sols = itertools.permutations(clrs, 4) 
+	# End if
+	# Create list object from all solutions
+	sols_list = []
+	for sol in all_sols:
+		sols_list.append("".join(x for x in list(sol)))
+		#print("".join(x for x in list(sol))) # Include for debugging
+	#print(len(sols_list)) # Include for debugging
+	poss_sols = sols_list[:] # Copy available solutions
+	return [sols_list, poss_sols]
+
+print("Welcome to Hit & Blow (aka Mastermind).")
+
+# Game Setup - Create all possible solutions
+[game_lvl, colors] = get_level()
+[all_solutions_list, possible_solutions] = get_solutions(game_lvl, colors)
 
 # Pseudo Solution - Have the program pick a solution
 the_solution = all_solutions_list[random.randint(0,len(all_solutions_list)-1)]
 #print("The Solution: {0}".format(the_solution))
 
 # Game Instructions
-print("Welcome to Hit & Blow.")
 print("Available colors are {0}.".format(colors))
 
 # User Attempts
@@ -131,9 +148,9 @@ while True:
 		possible_solutions.remove(x) # Remove it from the valid solutions
 	
 	# Include for assistance
-	#print("Possible solutions left: {0}".format(len(possible_solutions)))
-	#if len(possible_solutions) < 11:
-	#	print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
+	print("Possible solutions left: {0}".format(len(possible_solutions)))
+	if len(possible_solutions) < 11:
+		print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
 	
 	# Continue to next attempt
 	attmpt_num += 1
