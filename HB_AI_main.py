@@ -3,9 +3,8 @@ A simple AI for playing Hit & Blow (Mastermind).
 Basic Idea: Create all possible solutions, and use attempts to
 reduce possible solutions down to just one.
 To Do:
-	- Create game options at start (assist mode)
-	- Create player option to play again
-	- Have AI pick randomly from possible solutions
+	- Have AI suggest next attempt
+	- Validate hit/blow in manual mode
 By: Timothy Anglea
 '''
 
@@ -136,26 +135,46 @@ def set_mode():
 
 print("Welcome to Hit & Blow (aka Mastermind).")
 mode_select = True
+affirm = ["yes","y"]
 while True:
-	## Select mode; set mode_select to false
-	if mode_select:
+	## Select game mode
+	while True:
+		if mode_select == False:
+			modeset = input("Do you want to play the same mode? ").lower()
+			if modeset in affirm:
+				break # Exit while loop
+			# End if
+		# End if
 		game_mode = set_mode()
-		#mode_select = False
-	# End if
+		mode_select = False
+		level_select = True
+		break
+	# End while
 	## Select game level
-	[game_lvl, colors] = get_level()
+	while True:
+		if level_select == False:
+			levelset = input("Do you want to play the same level? ").lower()
+			if levelset in affirm:
+				break # Exit while loop
+			# End if
+		# End if
+		[game_lvl, colors] = get_level()
+		level_select = False
+		break
+	# End while
 	# Game Instructions
 	if game_lvl % 2 == 1:
 		print("Available colors are {0}. Duplicates are not allowed.".format(colors))
 	else:
 		print("Available colors are {0}. Duplicates are allowed.".format(colors))
 	# End if
+	## Play the game
 	all_solutions_list = get_solutions(game_lvl, colors)
 	if game_mode in [1,2]: # If playing against CPU...
 		# Pseudo Solution - Have the CPU pick a solution
 		the_solution = all_solutions_list[random.randint(0,len(all_solutions_list)-1)]
 		#print("The Solution: {0}".format(the_solution))
-	
+		
 		# User Attempts
 		attmpt_num = 1 # Initialize attempt number for first guess
 		possible_solutions = reset_possible(all_solutions_list)
@@ -196,19 +215,58 @@ while True:
 			attmpt_num += 1
 		# End while
 	elif game_mode in [3]:
-		print("Sorry. This mode has not yet been implemented.")
+		print("This mode is still in beta.")
+		# User Attempts
+		attmpt_num = 1 # Initialize attempt number for first guess
+		possible_solutions = reset_possible(all_solutions_list)
+		while True:
+			if attmpt_num > 8:
+				print("Too many guesses. Sorry.")
+				#print("Actual solution: {0}".format("".join(the_solution)))
+				break
+			# End if
+			attempt = get_attempt(attmpt_num, all_solutions_list)
+			################
+			# Ask for number of hits/blows; validate response
+			hits = int(input("How many hits? "))
+			blows = int(input("How many blows? "))
+			#[hits,blows] = check_attempt(attempt, the_solution)
+			#print("Hits: {0}; Blows: {1}".format(hits,blows))
+			
+			# Find remaining valid solutions based on current attempt.
+			sol_remove = [] # list of solutions to remove; they're invalid
+			for possible in possible_solutions: # For each possible solution
+				[hp,bp] = check_attempt(attempt, possible) # find hits,blows for the attempt if possible is the solution
+				if hp == hits and bp == blows: # If the hits,blows match...
+					continue # possible is still a valid solution
+				# End if
+				sol_remove.append(possible) # Otherwise, it will be removed
+			# End for
+			for x in sol_remove: # For each solution to remove
+				possible_solutions.remove(x) # Remove it from the valid solutions
+			# End for
+			###################
+			if hits == 4: # Win Condition
+				print("Congratulations! You win!")
+				break
+			# End if
+			
+			# Include for assistance
+			print("Possible solutions left: {0}".format(len(possible_solutions)))
+			if len(possible_solutions) < 21:
+				print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
+			# End if
+			# Continue to next attempt
+			attmpt_num += 1
+		# End while
 	else: #game_mode in [0]
 		print("This is a secret to everyone.")
 	# End if
 	repeat = input("Would you like to play again? ").lower()
 	if repeat in ["yes","y"]:
-		os.system('cls')
-		continue
+		continue # Go back to beginning of while loop
+	# End if
 	break # if no repeat, break while loop
 # End while
-
-
-# Play
-# Ask for repeat; If no, end loop
 
 pause = input("Thanks for playing my game! (Press Enter to exit.)")
