@@ -11,6 +11,7 @@ By: Timothy Anglea
 
 import itertools
 import random
+import os
 
 def get_attempt(num, all_sol):
 	while True:
@@ -113,82 +114,101 @@ def get_solutions(lvl, clrs):
 def reset_possible(sols_list):
 	return sols_list[:] # Copy list of available solutions
 
-print("Welcome to Hit & Blow (aka Mastermind).")
-while True:
-	try:
-		print("Which mode would you like to use?")
-		#print("Mode 0 -> CPU play against itself")
-		print("Mode: 1 -> Play against CPU")
-		print("Mode: 2 -> Play with CPU assist")
-		print("Mode: 3 -> Manual CPU assist")
-		game_mode = int(input("Mode: "))
-		if game_mode < 0 or game_mode > 3:
-			print("Not a valid game mode. Please select from the available modes.")
-			continue
-		# End if
-		break
-	except ValueError:
-		print("Not a valid game mode. Please enter an number.")
-		continue
-
-# Game Setup - Create all possible solutions
-[game_lvl, colors] = get_level()
-# Game Instructions
-if game_lvl % 2 == 1:
-	print("Available colors are {0}. Duplicates are not allowed.".format(colors))
-else:
-	print("Available colors are {0}. Duplicates are allowed.".format(colors))
-
-all_solutions_list = get_solutions(game_lvl, colors)
-
-if game_mode in [1,2]: # If playing against CPU...
-	# Pseudo Solution - Have the CPU pick a solution
-	the_solution = all_solutions_list[random.randint(0,len(all_solutions_list)-1)]
-	#print("The Solution: {0}".format(the_solution))
-	
-	# User Attempts
-	attmpt_num = 1 # Initialize attempt number for first guess
-	possible_solutions = reset_possible(all_solutions_list)
+def set_mode():
 	while True:
-		if attmpt_num > 8:
-			print("Too many guesses. Sorry.")
-			print("Actual solution: {0}".format("".join(the_solution)))
-			break
-		# End if
-		attempt = get_attempt(attmpt_num, all_solutions_list)
-		[hits,blows] = check_attempt(attempt, the_solution)
-		print("Hits: {0}; Blows: {1}".format(hits,blows))
-		if hits == 4: # Win Condition
-			print("Congratulations! You win!")
-			break
-		# End if
-		if game_mode == 2:
-			# Find remaining valid solutions based on current attempt.
-			sol_remove = [] # list of solutions to remove; they're invalid
-			for possible in possible_solutions: # For each possible solution
-				[hp,bp] = check_attempt(attempt, possible) # find hits,blows for the attempt if possible is the solution
-				if hp == hits and bp == blows: # If the hits,blows match...
-					continue # possible is still a valid solution
-				# End if
-				sol_remove.append(possible) # Otherwise, it will be removed
-			# End for
-			for x in sol_remove: # For each solution to remove
-				possible_solutions.remove(x) # Remove it from the valid solutions
-			# End for
-			
-			# Include for assistance
-			print("Possible solutions left: {0}".format(len(possible_solutions)))
-			if len(possible_solutions) < 21:
-				print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
+		try:
+			print("Which mode would you like to use?")
+			#print("Mode 0 -> CPU play against itself")
+			print("Mode: 1 -> Play against CPU")
+			print("Mode: 2 -> Mode 1 with CPU assist")
+			print("Mode: 3 -> Manual play with CPU assist")
+			g_mode = int(input("Mode: "))
+			if g_mode < 0 or g_mode > 3:
+				print("Not a valid game mode. Please select from the available modes.")
+				continue
 			# End if
-		# End if
-		# Continue to next attempt
-		attmpt_num += 1
+			break
+		except ValueError:
+			print("Not a valid game mode. Please enter an number.")
+			continue
 	# End while
-elif game_mode in [3]:
-	print("Sorry. This mode has not yet been implemented.")
-else: #game_mode in [0]
-	print("This is a secret to everyone.")
-# End if
+	return g_mode
+
+print("Welcome to Hit & Blow (aka Mastermind).")
+mode_select = True
+while True:
+	## Select mode; set mode_select to false
+	if mode_select:
+		game_mode = set_mode()
+		#mode_select = False
+	# End if
+	## Select game level
+	[game_lvl, colors] = get_level()
+	# Game Instructions
+	if game_lvl % 2 == 1:
+		print("Available colors are {0}. Duplicates are not allowed.".format(colors))
+	else:
+		print("Available colors are {0}. Duplicates are allowed.".format(colors))
+	# End if
+	all_solutions_list = get_solutions(game_lvl, colors)
+	if game_mode in [1,2]: # If playing against CPU...
+		# Pseudo Solution - Have the CPU pick a solution
+		the_solution = all_solutions_list[random.randint(0,len(all_solutions_list)-1)]
+		#print("The Solution: {0}".format(the_solution))
+	
+		# User Attempts
+		attmpt_num = 1 # Initialize attempt number for first guess
+		possible_solutions = reset_possible(all_solutions_list)
+		while True:
+			if attmpt_num > 8:
+				print("Too many guesses. Sorry.")
+				print("Actual solution: {0}".format("".join(the_solution)))
+				break
+			# End if
+			attempt = get_attempt(attmpt_num, all_solutions_list)
+			[hits,blows] = check_attempt(attempt, the_solution)
+			print("Hits: {0}; Blows: {1}".format(hits,blows))
+			if hits == 4: # Win Condition
+				print("Congratulations! You win!")
+				break
+			# End if
+			if game_mode == 2:
+				# Find remaining valid solutions based on current attempt.
+				sol_remove = [] # list of solutions to remove; they're invalid
+				for possible in possible_solutions: # For each possible solution
+					[hp,bp] = check_attempt(attempt, possible) # find hits,blows for the attempt if possible is the solution
+					if hp == hits and bp == blows: # If the hits,blows match...
+						continue # possible is still a valid solution
+					# End if
+					sol_remove.append(possible) # Otherwise, it will be removed
+				# End for
+				for x in sol_remove: # For each solution to remove
+					possible_solutions.remove(x) # Remove it from the valid solutions
+				# End for
+			
+				# Include for assistance
+				print("Possible solutions left: {0}".format(len(possible_solutions)))
+				if len(possible_solutions) < 21:
+					print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
+				# End if
+			# End if
+			# Continue to next attempt
+			attmpt_num += 1
+		# End while
+	elif game_mode in [3]:
+		print("Sorry. This mode has not yet been implemented.")
+	else: #game_mode in [0]
+		print("This is a secret to everyone.")
+	# End if
+	repeat = input("Would you like to play again? ").lower()
+	if repeat in ["yes","y"]:
+		os.system('cls')
+		continue
+	break # if no repeat, break while loop
+# End while
+
+
+# Play
+# Ask for repeat; If no, end loop
 
 pause = input("Thanks for playing my game! (Press Enter to exit.)")
