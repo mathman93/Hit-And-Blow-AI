@@ -10,7 +10,6 @@ By: Timothy Anglea
 
 import itertools
 import random
-import os
 
 def get_attempt(num, all_sol):
 	while True:
