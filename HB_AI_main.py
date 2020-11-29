@@ -3,8 +3,7 @@ A simple AI for playing Hit & Blow (Mastermind).
 Basic Idea: Create all possible solutions, and use attempts to
 reduce possible solutions down to just one.
 To Do:
-	- Have AI suggest next attempt
-	- Validate hit/blow in manual mode
+	- Reprogram in Julia
 By: Timothy Anglea
 '''
 
@@ -152,7 +151,7 @@ def find_possible(all_poss,attempt,h,b):
 def get_nexttry(possible_solutions):
 	num_poss = len(possible_solutions)
 	print("Thinking...")
-	poss_select = random.sample(possible_solutions,k=num_poss) if num_poss<11 else random.sample(possible_solutions,k=10)
+	poss_select = random.sample(possible_solutions,k=num_poss) if num_poss<21 else random.sample(possible_solutions,k=20)
 	vlen_array = []
 	maybe_sol_list = possible_solutions[:] if num_poss<101 else random.sample(possible_solutions,k=100)
 	for i1 in range(len(poss_select)):
