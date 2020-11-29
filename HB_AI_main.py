@@ -10,6 +10,7 @@ By: Timothy Anglea
 
 import itertools
 import random
+import numpy as np
 
 def get_attempt(num, all_sol):
 	while True:
@@ -132,6 +133,43 @@ def set_mode():
 	# End while
 	return g_mode
 
+def find_possible(all_poss,attempt,h,b):
+	# Find remaining valid solutions based on current attempt.
+	#sol_remove = [] # list of solutions to remove; they're invalid
+	valid = [] # List of solutions that are still valid
+	for possible in all_poss: # For each possible solution
+		[hp,bp] = check_attempt(attempt, possible) # find hits,blows for the attempt if possible is the solution
+		if hp == h and bp == b: # If the hits,blows match...
+			valid.append(possible) # possible is still a valid solution
+			#continue # possible is still a valid solution
+		# End if
+		#sol_remove.append(possible) # Otherwise, it will be removed
+	# End for
+	#for x in sol_remove: # For each solution to remove
+	#	possible_solutions.remove(x) # Remove it from the valid solutions
+	# End for
+	return valid
+
+def get_nexttry(possible_solutions):
+	num_poss = len(possible_solutions)
+	print("Thinking...")
+	poss_select = random.sample(possible_solutions,k=num_poss) if num_poss<11 else random.sample(possible_solutions,k=10)
+	vlen_array = []
+	maybe_sol_list = possible_solutions[:] if num_poss<101 else random.sample(possible_solutions,k=100)
+	for i1 in range(len(poss_select)):
+		poss_attmpt = poss_select[i1]
+		vlen_array.append(0)
+		# if poss_attmpt is next attempt, find remaining valid solutions
+		for maybe_sol in maybe_sol_list: # Assume a solution from remaining possible solutions
+			[h_poss,b_poss] = check_attempt(poss_attmpt,maybe_sol) # find hits/blows
+			valid_sols = find_possible(maybe_sol_list,poss_attmpt,h_poss,b_poss)
+			# Save len(valid_sols); repeat for each possible solution
+			vlen_array[i1] += len(valid_sols)
+		# End for
+		#print("{0}: {1}".format(poss_attmpt, vlen_array[i1])) # Include for debugging
+	# End for
+	return poss_select[vlen_array.index(min(vlen_array))]
+
 print("Welcome to Hit & Blow (aka Mastermind).")
 mode_select = True
 affirm = ["yes","y"]
@@ -190,66 +228,53 @@ while True:
 				print("Congratulations! You win!")
 				break
 			# End if
-			if game_mode == 2:
-				# Find remaining valid solutions based on current attempt.
-				sol_remove = [] # list of solutions to remove; they're invalid
-				for possible in possible_solutions: # For each possible solution
-					[hp,bp] = check_attempt(attempt, possible) # find hits,blows for the attempt if possible is the solution
-					if hp == hits and bp == blows: # If the hits,blows match...
-						continue # possible is still a valid solution
-					# End if
-					sol_remove.append(possible) # Otherwise, it will be removed
-				# End for
-				for x in sol_remove: # For each solution to remove
-					possible_solutions.remove(x) # Remove it from the valid solutions
-				# End for
-			
+			if game_mode == 2: # Provide assistance on remaining valid solutions
+				possible_solutions = find_possible(possible_solutions,attempt,hits,blows)
+				#num_poss = len(possible_solutions)
 				# Include for assistance
 				print("Possible solutions left: {0}".format(len(possible_solutions)))
-				if len(possible_solutions) < 21:
-					print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
+				next_try = get_nexttry(possible_solutions)
+				print("Try {0}.".format(next_try))
+				#if num_poss < 11: # Include for debugging
+				#	print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
 				# End if
 			# End if
 			# Continue to next attempt
 			attmpt_num += 1
 		# End while
 	elif game_mode in [3]:
-		print("This mode is still in beta.")
 		# User Attempts
 		attmpt_num = 1 # Initialize attempt number for first guess
 		possible_solutions = reset_possible(all_solutions_list)
 		while True:
 			if attmpt_num > 8:
 				print("Too many guesses. Sorry.")
-				#print("Actual solution: {0}".format("".join(the_solution)))
 				break
 			# End if
 			attempt = get_attempt(attmpt_num, all_solutions_list)
-			################
 			# Ask for number of hits/blows; validate response
-			hits = int(input("How many hits? "))
-			blows = int(input("How many blows? "))
-			#[hits,blows] = check_attempt(attempt, the_solution)
-			#print("Hits: {0}; Blows: {1}".format(hits,blows))
-			
-			# Find remaining valid solutions based on current attempt.
-			sol_remove = [] # list of solutions to remove; they're invalid
-			for possible in possible_solutions: # For each possible solution
-				[hp,bp] = check_attempt(attempt, possible) # find hits,blows for the attempt if possible is the solution
-				if hp == hits and bp == blows: # If the hits,blows match...
-					continue # possible is still a valid solution
-				# End if
-				sol_remove.append(possible) # Otherwise, it will be removed
-			# End for
-			for x in sol_remove: # For each solution to remove
-				possible_solutions.remove(x) # Remove it from the valid solutions
-			# End for
-			###################
+			while True:
+				try:
+					hits = int(input("How many hits? "))
+					blows = int(input("How many blows? "))
+					if hits < 0 or hits > 4 or blows < 0 or blows > 4 or (hits+blows) > 4:
+						print("Not a valid number of hits & blows. Please try again.")
+						continue
+					# End if
+					valid_solutions = find_possible(possible_solutions,attempt,hits,blows)
+					if len(valid_solutions) == 0:
+						print("Something went wrong. No valid solutions exist. \nEnter the number of hits & blows again.")
+						continue
+					possible_solutions = valid_solutions
+					break
+				except ValueError:
+					print("Not a valid number entry. Try again.")
+					continue
+			# End while
 			if hits == 4: # Win Condition
 				print("Congratulations! You win!")
 				break
 			# End if
-			
 			# Include for assistance
 			print("Possible solutions left: {0}".format(len(possible_solutions)))
 			if len(possible_solutions) < 21:
@@ -260,6 +285,34 @@ while True:
 		# End while
 	else: #game_mode in [0]
 		print("This is a secret to everyone.")
+		# Pseudo Solution - Have the CPU pick a solution
+		the_solution = all_solutions_list[random.randint(0,len(all_solutions_list)-1)]
+		#print("The Solution: {0}".format(the_solution))
+		
+		# User Attempts
+		attmpt_num = 1 # Initialize attempt number for first guess
+		possible_solutions = reset_possible(all_solutions_list)
+		while True:
+			if attmpt_num > 8:
+				print("Too many guesses. Sorry.")
+				print("Actual solution: {0}".format("".join(the_solution)))
+				break
+			# End if
+			attempt = next_try if attmpt_num > 1 else random.choice(possible_solutions)
+			print("Guess #{0}: {1}".format(attmpt_num, attempt))
+			[hits,blows] = check_attempt(attempt, the_solution)
+			print("Hits: {0}; Blows: {1}".format(hits,blows))
+			if hits == 4: # Win Condition
+				print("Congratulations! You win!")
+				break
+			# End if
+			possible_solutions = find_possible(possible_solutions,attempt,hits,blows)
+			# Include for assistance
+			print("Possible solutions left: {0}".format(len(possible_solutions)))
+			next_try = get_nexttry(possible_solutions)
+			# Continue to next attempt
+			attmpt_num += 1
+		# End while
 	# End if
 	repeat = input("Would you like to play again? ").lower()
 	if repeat in ["yes","y"]:
