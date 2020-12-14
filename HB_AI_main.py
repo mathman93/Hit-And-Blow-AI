@@ -10,14 +10,14 @@ By: Timothy Anglea
 import itertools
 import random
 
-def get_attempt(num, all_sol):
+def get_attempt(num, all_sol, gsize):
 	while True:
 		try:
 			# Get user attempt
 			attempt = input("Guess #{0}: ".format(num)).lower() # String of lowercase letters
 			# Data validation
-			if len(attempt) != 4: # If guess is not the right length...
-				print("Attempt must be 4 colors. Try again.")
+			if len(attempt) != gsize: # If guess is not the right length...
+				print("Attempt must be {0} colors. Try again.".format(gsize))
 				continue
 			# End if
 			if attempt not in all_sol: # Only guess possible solutions
@@ -32,13 +32,13 @@ def get_attempt(num, all_sol):
 	#print(attempt) # Include for debugging
 	return attempt
 
-def check_attempt(attempt, the_sol):
+def check_attempt(attempt, the_sol, gsize):
 	# Check attempt - Determine hits and blows
 	h = 0
 	b = 0
 	sol_copy = list(the_sol) # Copy for use in function
 	hit_check = []
-	for i in range(4): # Iterate over the attempt
+	for i in range(gsize): # Iterate over the attempt
 		# First, find hits.
 		if attempt[i] == sol_copy[i]: # If attempt and solution match...
 			h += 1 # Attempt matches solution at position i
@@ -48,10 +48,10 @@ def check_attempt(attempt, the_sol):
 		# End if
 	# End for
 	# Then, find blows.
-	for i1 in range(4): #Iterate over the attempt
+	for i1 in range(gsize): #Iterate over the attempt
 		if i1 in hit_check:
 			continue
-		for i2 in range(4): #Iterate over the solution
+		for i2 in range(gsize): #Iterate over the solution
 			if attempt[i1] == sol_copy[i2]: # if the color is in the solution
 				b += 1 # Attempt matches a color in the solution
 				sol_copy[i2] = " " # Clear solution color; it's been accounted for
@@ -92,13 +92,13 @@ def get_level():
 	# End while
 	return [lvl, clrs]
 
-def get_solutions(lvl, clrs):
+def get_solutions(lvl, clrs, gsize):
 	if lvl % 2 == 0: # (2, 4, 6, & 8)
 		# Use all possible combinations of colors
-		all_sols = itertools.product(clrs, repeat=4)
+		all_sols = itertools.product(clrs, repeat=gsize)
 	else: # (1, 3, 5, & 7)
 		# Use only permutations with unique colors
-		all_sols = itertools.permutations(clrs, 4) 
+		all_sols = itertools.permutations(clrs, gsize) 
 	# End if
 	# Create list object from all solutions
 	sols_list = []
@@ -131,12 +131,12 @@ def set_mode():
 	# End while
 	return g_mode
 
-def find_possible(all_poss,attempt,h,b):
+def find_possible(all_poss,attempt,h,b,gsize):
 	# Find remaining valid solutions based on current attempt.
 	#sol_remove = [] # list of solutions to remove; they're invalid
 	valid = [] # List of solutions that are still valid
 	for possible in all_poss: # For each possible solution
-		[hp,bp] = check_attempt(attempt, possible) # find hits,blows for the attempt if possible is the solution
+		[hp,bp] = check_attempt(attempt, possible, gsize) # find hits,blows for the attempt if possible is the solution
 		if hp == h and bp == b: # If the hits,blows match...
 			valid.append(possible) # possible is still a valid solution
 			#continue # possible is still a valid solution
@@ -148,7 +148,7 @@ def find_possible(all_poss,attempt,h,b):
 	# End for
 	return valid
 
-def get_nexttry(possible_solutions):
+def get_nexttry(possible_solutions,gsize):
 	num_poss = len(possible_solutions)
 	print("Thinking...")
 	poss_select = random.sample(possible_solutions,k=num_poss) if num_poss<21 else random.sample(possible_solutions,k=20)
@@ -159,8 +159,8 @@ def get_nexttry(possible_solutions):
 		vlen_array.append(0)
 		# if poss_attmpt is next attempt, find remaining valid solutions
 		for maybe_sol in maybe_sol_list: # Assume a solution from remaining possible solutions
-			[h_poss,b_poss] = check_attempt(poss_attmpt,maybe_sol) # find hits/blows
-			valid_sols = find_possible(maybe_sol_list,poss_attmpt,h_poss,b_poss)
+			[h_poss,b_poss] = check_attempt(poss_attmpt,maybe_sol,gsize) # find hits/blows
+			valid_sols = find_possible(maybe_sol_list,poss_attmpt,h_poss,b_poss,gsize)
 			# Save len(valid_sols); repeat for each possible solution
 			vlen_array[i1] += len(valid_sols)
 		# End for
@@ -171,6 +171,7 @@ def get_nexttry(possible_solutions):
 print("Welcome to Hit & Blow (aka Mastermind).")
 mode_select = True
 affirm = ["yes","y"]
+
 while True:
 	## Select game mode
 	while True:
@@ -203,8 +204,9 @@ while True:
 	else:
 		print("Available colors are {0}. Duplicates are allowed.".format(colors))
 	# End if
+	guess_size = 6
 	## Play the game
-	all_solutions_list = get_solutions(game_lvl, colors)
+	all_solutions_list = get_solutions(game_lvl, colors, guess_size)
 	if game_mode in [1,2]: # If playing against CPU...
 		# Pseudo Solution - Have the CPU pick a solution
 		the_solution = all_solutions_list[random.randint(0,len(all_solutions_list)-1)]
@@ -219,19 +221,19 @@ while True:
 				print("Actual solution: {0}".format("".join(the_solution)))
 				break
 			# End if
-			attempt = get_attempt(attmpt_num, all_solutions_list)
-			[hits,blows] = check_attempt(attempt, the_solution)
+			attempt = get_attempt(attmpt_num, all_solutions_list, guess_size)
+			[hits,blows] = check_attempt(attempt, the_solution, guess_size)
 			print("Hits: {0}; Blows: {1}".format(hits,blows))
-			if hits == 4: # Win Condition
+			if hits == guess_size: # Win Condition
 				print("Congratulations! You win!")
 				break
 			# End if
 			if game_mode == 2: # Provide assistance on remaining valid solutions
-				possible_solutions = find_possible(possible_solutions,attempt,hits,blows)
+				possible_solutions = find_possible(possible_solutions,attempt,hits,blows,guess_size)
 				#num_poss = len(possible_solutions)
 				# Include for assistance
 				print("Possible solutions left: {0}".format(len(possible_solutions)))
-				next_try = get_nexttry(possible_solutions)
+				next_try = get_nexttry(possible_solutions,guess_size)
 				print("Try {0}.".format(next_try))
 				#if num_poss < 11: # Include for debugging
 				#	print("; ".join(["".join([x for x in s]) for s in possible_solutions]))
@@ -249,17 +251,17 @@ while True:
 				print("Too many guesses. Sorry.")
 				break
 			# End if
-			attempt = get_attempt(attmpt_num, all_solutions_list)
+			attempt = get_attempt(attmpt_num, all_solutions_list, guess_size)
 			# Ask for number of hits/blows; validate response
 			while True:
 				try:
 					hits = int(input("How many hits? "))
 					blows = int(input("How many blows? "))
-					if hits < 0 or hits > 4 or blows < 0 or blows > 4 or (hits+blows) > 4:
+					if hits < 0 or hits > guess_size or blows < 0 or blows > guess_size or (hits+blows) > guess_size:
 						print("Not a valid number of hits & blows. Please try again.")
 						continue
 					# End if
-					valid_solutions = find_possible(possible_solutions,attempt,hits,blows)
+					valid_solutions = find_possible(possible_solutions,attempt,hits,blows,guess_size)
 					if len(valid_solutions) == 0:
 						print("Something went wrong. No valid solutions exist. \nEnter the number of hits & blows again.")
 						continue
@@ -269,7 +271,7 @@ while True:
 					print("Not a valid number entry. Try again.")
 					continue
 			# End while
-			if hits == 4: # Win Condition
+			if hits == guess_size: # Win Condition
 				print("Congratulations! You win!")
 				break
 			# End if
@@ -298,16 +300,16 @@ while True:
 			# End if
 			attempt = next_try if attmpt_num > 1 else random.choice(possible_solutions)
 			print("Guess #{0}: {1}".format(attmpt_num, attempt))
-			[hits,blows] = check_attempt(attempt, the_solution)
+			[hits,blows] = check_attempt(attempt, the_solution, guess_size)
 			print("Hits: {0}; Blows: {1}".format(hits,blows))
-			if hits == 4: # Win Condition
+			if hits == guess_size: # Win Condition
 				print("Congratulations! You win!")
 				break
 			# End if
-			possible_solutions = find_possible(possible_solutions,attempt,hits,blows)
+			possible_solutions = find_possible(possible_solutions,attempt,hits,blows,guess_size)
 			# Include for assistance
 			print("Possible solutions left: {0}".format(len(possible_solutions)))
-			next_try = get_nexttry(possible_solutions)
+			next_try = get_nexttry(possible_solutions,guess_size)
 			# Continue to next attempt
 			attmpt_num += 1
 		# End while
