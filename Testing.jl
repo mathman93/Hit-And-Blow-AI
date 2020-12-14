@@ -23,18 +23,17 @@ println(exp(complex(0,pi)))
 =#
 
 # a^p + b^p = x = c^p + d^p; c>a>=b>d
-n = Int128(250001)
-N = Int128(250001)
-p = 5
+n = Int128(1)
+N = Int128(1000)
+p = 4
 println("Starting...")
-#f = 0
-#cnt = 0
+sols = Tuple{Int128,Int128,Int128,Int128,Int128}[] # Empty array of solutions
 @time begin
 for c in n:1:N
     @printf("Checking c = %d...\n", c)
     min_a = Int128(ceil(((c^p)/2)^(1/p)))
     for a in min_a:1:c-1
-        if a % 100 == 0
+        if a % 100 == min_a % 100
             @printf("  Checking a = %d...\n", a)
         end
         min_b = Int128(ceil((c^p - a^p)^(1/p)))
@@ -42,21 +41,22 @@ for c in n:1:N
             x1 = a^p + b^p
             min_d = Int128(floor((x1 - c^p)^(1/p)))
             for d in min_d:1:b-1
-                #cnt += 1
                 x2 = c^p + d^p
                 if x2 < x1
-                    continue
+                    continue # go to next d value
                 elseif x2 > x1
-                    break
+                    break # go to next b value
                 else
-                    #f += 1
-                    println(x1)
-                    #println(typeof(x1))
-                    @printf("%d, %d, %d, %d\n",a,b,c,d)
+                    append!(sols, [(a,b,c,d,x1)]) # Save solution
                 end
-            end
-        end
-    end
+            end # for d
+        end # for b
+    end # for a
+end # for c
+end # @time
+for thing in sols # For each solution, display result nicely
+    a1 = thing[1]; b1 = thing[2]; c1 = thing[3]; d1 = thing[4]; x = thing[5]
+    @printf("%d^%d + %d^%d = %d^%d + %d^%d = %d\n",a1,p,b1,p,c1,p,d1,p,x)
 end
-end
+println(length(sols))
 #print(f/cnt)
