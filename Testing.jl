@@ -23,8 +23,8 @@ println(exp(complex(0,pi)))
 =#
 
 # a^p + b^p = x = c^p + d^p; c>a>=b>d
-n = Int128(1)
-N = Int128(1000)
+n = Int128(1001)
+N = Int128(1500)
 p = 4
 println("Starting...")
 sols = Tuple{Int128,Int128,Int128,Int128,Int128}[] # Empty array of solutions
