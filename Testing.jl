@@ -22,6 +22,7 @@ println(func(complex(0,pi)))
 println(exp(complex(0,pi)))
 =#
 
+#=
 # a^p + b^p = x = c^p + d^p; c>a>=b>d
 n = Int128(1001)
 N = Int128(1500)
@@ -60,3 +61,34 @@ for thing in sols # For each solution, display result nicely
 end
 println(length(sols))
 #print(f/cnt)
+=# 
+#
+function scopetest()
+    local thing
+    while true
+        try
+            print("Enter a number (or not): ")
+            thing = parse(Int, readline()) # Give thing scope outside of while loop.
+            if thing > 10 || thing < 0
+                println("Number is outside of range. Try again.")
+                continue
+            end
+            break
+        catch err
+            println("Not an integer. Try again.")
+            continue
+        end
+    end
+    return thing
+    @printf("Your number is %d.",thing)
+end
+
+stuff = scopetest()
+println("The number is ", stuff, ".")
+#
+#=
+mystring = "abcde"
+println(mystring[3])
+mystring[3] = "f" # Not valid; strings are immutable
+println(mystring)
+=#
