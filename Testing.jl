@@ -1,5 +1,6 @@
 # Testing.jl
 using Printf
+using Combinatorics
 #= 
 function func(num)
     result = big(0.0)
@@ -62,33 +63,30 @@ end
 println(length(sols))
 #print(f/cnt)
 =# 
-#
+#=
 function scopetest()
-    local thing
+    local thing2 # Give thing scope inside function
     while true
         try
-            print("Enter a number (or not): ")
-            thing = parse(Int, readline()) # Give thing scope outside of while loop.
-            if thing > 10 || thing < 0
-                println("Number is outside of range. Try again.")
-                continue
-            end
+            print("Enter a string (or not): ")
+            #thing = parse(Int, readline())
+            thing2 = lowercase(readline())
             break
         catch err
             println("Not an integer. Try again.")
             continue
         end
     end
-    return thing
-    @printf("Your number is %d.",thing)
+    return thing2
 end
 
 stuff = scopetest()
 println("The number is ", stuff, ".")
-#
+=#
 #=
 mystring = "abcde"
 println(mystring[3])
 mystring[3] = "f" # Not valid; strings are immutable
 println(mystring)
 =#
+

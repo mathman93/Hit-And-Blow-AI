@@ -204,7 +204,7 @@ while True:
 	else:
 		print("Available colors are {0}. Duplicates are allowed.".format(colors))
 	# End if
-	guess_size = 6
+	guess_size = 4
 	## Play the game
 	all_solutions_list = get_solutions(game_lvl, colors, guess_size)
 	if game_mode in [1,2]: # If playing against CPU...
