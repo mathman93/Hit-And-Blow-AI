@@ -36,29 +36,23 @@ def check_attempt(attempt, the_sol, gsize):
 	# Check attempt - Determine hits and blows
 	h = 0
 	b = 0
-	sol_copy = list(the_sol) # Copy for use in function
-	hit_check = []
-	for i in range(gsize): # Iterate over the attempt
-		# First, find hits.
-		if attempt[i] == sol_copy[i]: # If attempt and solution match...
-			h += 1 # Attempt matches solution at position i
-			sol_copy[i] = " " # Clear solution color; it's been accounted for
-			hit_check.append(i)
-			continue # Continue to next position
-		# End if
-	# End for
-	# Then, find blows.
-	for i1 in range(gsize): #Iterate over the attempt
-		if i1 in hit_check:
-			continue
-		for i2 in range(gsize): #Iterate over the solution
-			if attempt[i1] == sol_copy[i2]: # if the color is in the solution
-				b += 1 # Attempt matches a color in the solution
-				sol_copy[i2] = " " # Clear solution color; it's been accounted for
-				break # End iteration over solution; continue to next attempt color
+	hit_check = [] # indices for the_sol that have been accounted for.
+	for i1 in range(gsize): # for each color in attempt
+		for i2 in range(gsize): # for each color in the_sol
+			if i2 in hit_check: # If that color in the_sol is already checked
+				continue # Go to next color in the_sol
 			# End if
-		# End for
-	# End for
+			if attempt[i1] == the_sol[i2]: # If the colors match...
+				if i1 == i2: # If its in the same position
+					h += 1 # It's a hit.
+				else: # Otherwise
+					b += 1 # It's a blow.
+				# End if
+				hit_check.append(i2) # the_sol[i2] has now been accounted for.
+				break # Move to next color in attempt
+			# End if
+		# End for i2
+	# End for i1
 	return [h, b]
 
 def get_level():
