@@ -1,7 +1,7 @@
 #= HB_AI_main.jl
 (will be) Same as HB_AI_main.py, but in Julia
 By: Timothy Anglea
-Still need to implement "get_nexttry" and Modes 0 & 3.
+Still need to improve"get_nexttry" and implement Modes 0 & 3.
 =#
 using Combinatorics
 
@@ -31,21 +31,8 @@ end
 
 function check_attempt(attmpt, the_sol, atmp_size)
     local h = 0; local b = 0;
-    #local atmpt_check = {Int}[];
     local sol_check = Int[];
-    #=for i in 1:atmp_size
-        if attempt[i] == sol_copy[i]
-            h += 1
-            # Clear solution color
-            push!(atmpt_check, i)
-            push!(sol_check, i)
-        end
-    end=#
-    # check each character in attempt against each character in the_sol
     for i1 in 1:atmp_size # attempt[i1]
-        #if i1 in atmpt_check # If already checked
-        #    continue # already checked it.
-        #end # if
         for i2 in 1:atmp_size # the_sol[i2]
             if i2 in sol_check
                 continue
@@ -55,8 +42,7 @@ function check_attempt(attmpt, the_sol, atmp_size)
                     h += 1 # it's a hit
                 else # If it's not in the same position
                     b += 1 # it's a blow
-                end
-                #push!(atmpt_check, i1)
+                end # if
                 push!(sol_check, i2) # Don't need to check that position in the solution again.
                 break # Go to next attempt position
             end # if
@@ -149,8 +135,29 @@ end
 
 function get_nexttry(all_poss, atmp_size)
     num_poss = length(all_poss)
-    println("Thinking... ")
-    #poss_select = 
+    print("Thinking... ")
+    if num_poss < 50
+        poss_select = copy(all_poss)
+    else # Or some subset
+        poss_select = all_poss[1:50]
+    end
+    local vlen_array = zeros(Int, length(poss_select)) # same length as poss_select
+    if num_poss < 500
+        maybe_sol_array = copy(all_poss)
+    else # Or some subset
+        maybe_sol_array = all_poss[1:500]
+    end
+    for i1 in 1:length(poss_select)
+        poss_attmpt = poss_select[i1]
+        #push!(vlen_array, 0)
+        for maybe_sol in maybe_sol_array
+            hp, bp = check_attempt(poss_attmpt, maybe_sol, atmp_size)
+            valid_sols = find_possible(maybe_sol_array, poss_attmpt, hp, bp, atmp_size)
+            vlen_array[i1] += length(valid_sols)
+        end
+        #print(poss_attmpt, ": ", vlen_array[i1], "; ")
+    end
+    return poss_select[argmin(vlen_array)]
 end
 
 println("Welcome to Hit & Blow - Julia Edition")
@@ -196,7 +203,7 @@ while true
     if game_mode == 1 || game_mode == 2 # Against CPU
         # Have CPU pick random solution
         the_solution = all_sols_array[rand(1:length(all_sols_array))]
-        println("The Solution: ", the_solution) # Include for debugging
+        #println("The Solution: ", the_solution) # Include for debugging
 
         # User attempts
         attmpt_num = 1 # Initial attempt number (first attempt)
@@ -219,9 +226,9 @@ while true
                 possible_solutions = find_possible(possible_solutions, attempt, hits, blows, guess_size)
                 num_poss = length(possible_solutions)
                 println("Possible solutions left: ", num_poss)
-                #next_try = get_nexttry()
-                #println("Try ", next_try,".")
-                #= Include for debugging
+                next_try = get_nexttry(possible_solutions, guess_size)
+                println("Try ", next_try,".")
+                #= #Include for debugging
                 if num_poss < 11
                     for sol in possible_solutions
                         print(sol, "; ")
