@@ -1,9 +1,10 @@
 #= HB_AI_main.jl
 (will be) Same as HB_AI_main.py, but in Julia
 By: Timothy Anglea
-Still need to improve"get_nexttry" and implement Modes 0 & 3.
+Still need to improve"get_nexttry".
 =#
 using Combinatorics
+using Random
 
 function get_attempt(num, all_sol, atmp_size)
     local attmpt
@@ -133,29 +134,30 @@ function find_possible(all_poss, attmpt, h, b, atmp_size)
     return valid
 end
 
-function get_nexttry(all_poss, atmp_size)
+function get_nexttry(all_poss, all_sols, atmp_size)
     num_poss = length(all_poss)
     print("Thinking... ")
-    if num_poss < 50
+    if num_poss < 20 # Take all of them
         poss_select = copy(all_poss)
-    else # Or some subset
-        poss_select = all_poss[1:50]
+        # Plus a few extra random ones, to check full solution space more quickly.
+        append!(poss_select, randsubseq(all_sols, (20-num_poss)/length(all_sols)))
+    else # some random subset
+        poss_select = randsubseq(all_poss, 20/length(all_poss))
     end
     local vlen_array = zeros(Int, length(poss_select)) # same length as poss_select
-    if num_poss < 500
+    if num_poss < 200 # Take all of them
         maybe_sol_array = copy(all_poss)
-    else # Or some subset
-        maybe_sol_array = all_poss[1:500]
+    else # some random subset
+        maybe_sol_array = randsubseq(all_poss, 200/length(all_poss))
     end
     for i1 in 1:length(poss_select)
         poss_attmpt = poss_select[i1]
-        #push!(vlen_array, 0)
         for maybe_sol in maybe_sol_array
             hp, bp = check_attempt(poss_attmpt, maybe_sol, atmp_size)
             valid_sols = find_possible(maybe_sol_array, poss_attmpt, hp, bp, atmp_size)
             vlen_array[i1] += length(valid_sols)
         end
-        #print(poss_attmpt, ": ", vlen_array[i1], "; ")
+        #print(poss_attmpt, ": ", vlen_array[i1], "; ") # Include for debugging
     end
     return poss_select[argmin(vlen_array)]
 end
@@ -226,7 +228,7 @@ while true
                 possible_solutions = find_possible(possible_solutions, attempt, hits, blows, guess_size)
                 num_poss = length(possible_solutions)
                 println("Possible solutions left: ", num_poss)
-                next_try = get_nexttry(possible_solutions, guess_size)
+                next_try = get_nexttry(possible_solutions, all_sols_array, guess_size)
                 println("Try ", next_try,".")
                 #= #Include for debugging
                 if num_poss < 11
@@ -240,11 +242,89 @@ while true
             attmpt_num += 1
         end # while
     elseif game_mode == 3 # Manual mode
-        println("Mode not yet implemented.")
-        # Stuff goes here
+        #println("Mode not yet implemented.")
+        attmpt_num = 1
+        possible_solutions = copy(all_sols_array)
+        while true
+            if attmpt_num > 8
+                println("Too many guesses. Sorry.")
+                break
+            end
+            attempt = get_attempt(attmpt_num, all_sols_array, guess_size)
+            local hits;
+            while true
+                try
+                    print("How many hits? ")
+                    hits = parse(Int, readline())
+                    print("How many blows? ")
+                    blows = parse(Int, readline())
+                    if hits < 0 || hits > guess_size || blows < 0 || blows > guess_size || (hits+blows) > guess_size
+                        println("Not a valid number of hits & blows. Please try again.")
+                        continue
+                    end
+                    valid_solutions = find_possible(possible_solutions, attempt, hits, blows, guess_size)
+                    if length(valid_solutions) == 0
+                        println("Something went wrong. No valid solutions exist.\nEnter the number of hits & blows again.")
+                        continue
+                    end
+                    possible_solutions = valid_solutions
+                    break
+                catch num_error
+                    println("Not a valid number entry. Try again.")
+                    continue
+                end # try
+            end # while
+            if hits == guess_size # Win condition
+                println("Congratulations! You win!")
+                break
+            end # if
+            println("Possible solutions left: ", length(possible_solutions))
+            if length(possible_solutions) < 21
+                for sol in possible_solutions
+                    print(sol, "; ")
+                end
+                print("\n")
+            end # if
+            # Continue to next attempt
+            attmpt_num += 1
+        end # while
     else # game_mode == 0
-        println("Nothing to see here. Move along.")
-        # Stuff goes here
+        println("This is a secret to everyone.")
+        the_solution = all_sols_array[rand(1:length(all_sols_array))]
+        #println("The Solution: ", the_solution) # Include for debugging
+
+        attmpt_num = 1 # Initial attempt number (first attempt)
+        possible_solutions = copy(all_sols_array)
+        while true
+            if attmpt_num > 8 # Fail condition
+                println("Too many guesses. Sorry.")
+                println("Actual solution: ", the_solution)
+                break
+            end
+            if attmpt_num > 1
+                attempt = get_nexttry(possible_solutions,all_sols_array, guess_size)
+            else
+                attempt = possible_solutions[rand(1:length(possible_solutions))]
+            end
+            println("Guess #", attmpt_num, ": ", attempt)
+            hits, blows = check_attempt(attempt, the_solution, guess_size)
+            println("Hits: ", hits, "; Blows: ", blows)
+            if hits == guess_size # Win condition
+                println("Congratulations! You win!")
+                break
+            end
+            possible_solutions = find_possible(possible_solutions, attempt, hits, blows, guess_size)
+            num_poss = length(possible_solutions)
+            println("Possible solutions left: ", num_poss)
+            #=if num_poss < 20
+                for sol in possible_solutions
+                    print(sol, "; ")
+                end
+                print("\n")
+            end # if =#
+            # Continue to next attempt
+            attmpt_num += 1
+        end # while
     end
     print("Would you like to play again? ")
     playagain = lowercase(readline())
@@ -255,4 +335,4 @@ while true
 end
 
 print("Thanks for playing my game! (Press Enter to exit.)")
-pause = readline()
+pause = readline();

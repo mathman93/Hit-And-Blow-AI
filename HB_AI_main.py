@@ -63,12 +63,9 @@ def get_level():
 	while True:
 		try:
 			lvl = int(input("Choose a difficulty level (1-8): "))
-			if lvl > 8 or lvl < 0:
+			if lvl > 8 or lvl < 1:
 				print("Not a valid difficulty level. Try again.")
 				continue
-			# End if
-			if lvl == 0: # Reserved for computer playing itself.
-				print("It's a secret to everyone.")
 			# End if
 			if lvl > 6: # (7 & 8)
 				clrs = nums # Use decimal symbols
