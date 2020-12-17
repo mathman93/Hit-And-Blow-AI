@@ -6,37 +6,55 @@ Still need to improve"get_nexttry".
 using Combinatorics
 using Random
 
+#= Asks user for a guess at the solution, performs data validation
+    Parameters:
+        num = Int; Number of the current user attempt/guess
+        all_sol = Array; All possible solutions for the game
+        atmp_size = Int; Length of the attempts/guesses for the game
+    Returns:
+        attmpt = String; User attempt/guess at the solution
+=#
 function get_attempt(num, all_sol, atmp_size)
-    local attmpt
+    local attmpt # User guess at the solution
     while true
         try
             print("Guess #", num, ": ")
-            attmpt = lowercase(readline())
-            if length(attmpt) != atmp_size
+            attmpt = lowercase(readline()) # Get attempt from user
+            if length(attmpt) != atmp_size # If it's not the right size
                 println("Attempt must be ", atmp_size, " colors. Try again.")
-                continue
+                continue # Try again
             end
             if attmpt in all_sol
-                break
-            else
+                break # Successful user attempt entry
+            else # Otherwise
                 println("Not a valid attempt. Try again.")
-                continue
+                continue # Try again
             end
-        catch str_error
+        catch str_error # error in parsing string (maybe not needed?)
             println("We've had an error. Try again.")
-            continue
+            continue # Try again
         end # try
     end # while
     return attmpt
-end
+end # function
 
+#= Checks user attempt against the solution, finds number of hits & blows
+    Parameters:
+        attmpt = String; User attempt/guess at the solution (from "get_attempt")
+        the_sol = String; The true solution for the game
+        atmp_size = Int; Length of the attempts/guesses for the game
+    Returns:
+        h = Int; Number of "hits" for the attempt
+        b = Int; Number of "blows" for the attempt
+    Note: (h+b) must be less than atmp_size
+=#
 function check_attempt(attmpt, the_sol, atmp_size)
-    local h = 0; local b = 0;
-    local sol_check = Int[];
-    for i1 in 1:atmp_size # attempt[i1]
-        for i2 in 1:atmp_size # the_sol[i2]
-            if i2 in sol_check
-                continue
+    local h = 0; local b = 0; # Number of hits/blows for attmpt
+    local sol_check = Int[]; # indices for the_sol colors that have been checked against attmpt
+    for i1 in 1:atmp_size # for each color in attmpt
+        for i2 in 1:atmp_size # for each color in the_sol
+            if i2 in sol_check # If the_sol color has already been checked
+                continue # Skip to next the_sol color
             end # if
             if attmpt[i1] == the_sol[i2] # If there's a match
                 if i1 == i2 # If it's in the same position
@@ -44,14 +62,48 @@ function check_attempt(attmpt, the_sol, atmp_size)
                 else # If it's not in the same position
                     b += 1 # it's a blow
                 end # if
-                push!(sol_check, i2) # Don't need to check that position in the solution again.
-                break # Go to next attempt position
+                push!(sol_check, i2) # Don't need to check that color in the_sol again.
+                break # Go to next color in attmpt
             end # if
         end # for i2
     end # for i1
     return h, b
-end
+end # function
 
+#= Ask user for desired game mode
+    Returns:
+        g_mode = Int; Game mode value (0-3)
+=#
+function get_mode()
+    local g_mode # Value of game mode being played
+    while true
+        try
+            # Game mode value instructions #
+            println("Which mode would you like to use?")
+			#println("Mode 0 -> CPU assist against CPU")
+			println("Mode: 1 -> Play against CPU")
+			println("Mode: 2 -> Play against CPU with CPU assist")
+            println("Mode: 3 -> Manual play with CPU assist")
+            print("Mode: ")
+            g_mode = parse(Int, readline()) # User input for game mode
+            if g_mode > 3 || g_mode < 0 # If not in the right range
+                println("Not a valid game mode. Please select from the available modes.")
+                continue # Try again
+            end # if
+            break # Successful game mode entry
+        catch num_error # error in parsing integer
+            println("Not a valid game mode. Please enter an integer.")
+            continue # Try again
+        end # try
+    end # while
+    return g_mode
+end # function
+
+#= Ask user for difficulty level, set colors used for the game
+    Returns:
+        lvl = Int; difficulty level for the game; 1 = easiest; 8 = hardest
+        clrs = String; "colors" used for the game
+=#
 function get_level()
     local lvl; local clrs;
     local c6 = "cgprwy"; local c7 = c6*"k"; local c8 = c7*"o"; local c10 = "0123456789"
@@ -59,23 +111,23 @@ function get_level()
         try
             print("Choose a difficulty level (1-8): ")
             lvl = parse(Int, readline())
-            if lvl > 8 || lvl < 1
+            if lvl > 8 || lvl < 1 # If not in the right range
                 println("Not a valid difficulty level. Try again.")
-                continue
-            end
+                continue # Try again
+            end # if
             if lvl > 6 # (7 & 8)
-                clrs = c10 # Numbers
+                clrs = c10 # Decimal numbers
             elseif lvl > 4 # (5 & 6)
-                clrs = c8 # 8 colors
+                clrs = c8 # 8 colors (cyan, green, purple, red, white, yellow, black, orange)
             elseif lvl > 2 # (3 & 4)
-                clrs = c7 # 7 colors
+                clrs = c7 # 7 colors (cyan, green, purple, red, white, yellow, black)
             else # (1 & 2)
-                clrs = c6 # 6 colors
-            end
-            break
-        catch num_error
+                clrs = c6 # 6 colors (cyan, green, purple, red, white, yellow)
+            end # if
+            break # Successful user level entry
+        catch num_error # error in parsing integer
             println("Not a valid difficulty level. Please select a number.")
-            continue
+            continue # Try again
         end # try
     end # while
     return lvl, clrs
@@ -97,30 +149,6 @@ function get_solutions(lvl, clrs, atmp_size)
         append!(all_solsarray, [pair_str])
     end
     return all_solsarray
-end
-
-function set_mode()
-    local g_mode
-    while true
-        try
-            println("Which mode would you like to use?")
-			#println("Mode 0 -> CPU play against itself")
-			println("Mode: 1 -> Play against CPU")
-			println("Mode: 2 -> Mode 1 with CPU assist")
-            println("Mode: 3 -> Manual play with CPU assist")
-            print("Mode: ")
-            g_mode = parse(Int, readline())
-            if g_mode > 3 || g_mode < 0
-                println("Not a valid game mode. Please select from the available modes.")
-                continue
-            end
-            break
-        catch num_error
-            println("Not a valid game mode. Please enter an integer.")
-            continue
-        end # try
-    end # while
-    return g_mode
 end
 
 function find_possible(all_poss, attmpt, h, b, atmp_size)
@@ -175,7 +203,7 @@ while true
                 break
             end
         end
-        global game_mode = set_mode()
+        global game_mode = get_mode()
         global mode_select = false
         global level_select = true
         break
