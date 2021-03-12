@@ -90,3 +90,29 @@ mystring[3] = "f" # Not valid; strings are immutable
 println(mystring)
 =#
 
+#=
+function sum_term(number)
+    #number = big(n)
+    number4 = 4*number
+    a1 = factorial(number4)
+    a2 = 26390*number + 1103
+    a3 = (big(4)^number * factorial(number))^big(4)
+    a4 = big(99)^(number4)
+    term = (a1 / a3) * (a2 / a4)
+    return term
+end
+
+K = 2
+pi_sum_list = [big(0.0) for x in 1:K]
+for k in 1:1:K
+    kbig = big(k-1)
+    pi_sum_list[k] = sum_term(kbig)
+    #println(pi_sum_list[k])
+end
+pi_sum = sum(pi_sum_list)
+println(pi_sum)
+pi_est = 9801/(sqrt(8)*pi_sum)
+println(pi_est)
+println(pi_est - pi)
+println(big(pi))
+=#
