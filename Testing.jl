@@ -92,7 +92,6 @@ println(mystring)
 
 #=
 function sum_term(number)
-    #number = big(n)
     number4 = 4*number
     a1 = factorial(number4)
     a2 = 26390*number + 1103
@@ -102,17 +101,18 @@ function sum_term(number)
     return term
 end
 
-K = 2
-pi_sum_list = [big(0.0) for x in 1:K]
+K = 11
+pi_sum_list = [BigFloat(0.0) for x in 1:K]
+pi_const = BigFloat(9801)/sqrt(BigFloat(8))
+@time begin
 for k in 1:1:K
-    kbig = big(k-1)
+    kbig = BigFloat(k-1)
     pi_sum_list[k] = sum_term(kbig)
     #println(pi_sum_list[k])
+    local pi_sum = sum(pi_sum_list)
+    #println(pi_sum)
+    local pi_est = pi_const/pi_sum
+    println("Loop ",k,": ", pi_est)
 end
-pi_sum = sum(pi_sum_list)
-println(pi_sum)
-pi_est = 9801/(sqrt(8)*pi_sum)
-println(pi_est)
-println(pi_est - pi)
-println(big(pi))
+end # @time
 =#
