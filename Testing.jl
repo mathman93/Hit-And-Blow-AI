@@ -1,6 +1,30 @@
 # Testing.jl
 using Printf
 using Combinatorics
+using Plots
+gr() # Use GR backend for Plots
+#x = 1:30;
+y = Vector{Int64}();
+append!(y,[4,5,3,4,5,2,1,3,5,4,4,5,4])
+push!(y,4)
+z = Vector{Int64}();
+append!(z,[6,5,7,8,3,5,4,6,6,4,6,5,6])
+push!(z,7)
+#append!(z)
+x1 = 1:10;
+yh = zeros(10,1);
+zh = zeros(10,1);
+for i1 in 1:length(y)
+    yh[y[i1]] += (1/length(y));
+    zh[z[i1]] += (1/length(z));
+end
+
+myplot = plot(x1,[yh,zh], 
+    seriestype = :line, 
+    size = (400,300),
+    label=["Plot Label 1" "Plot Label 2"]
+)
+
 #= 
 function func(num)
     result = big(0.0)

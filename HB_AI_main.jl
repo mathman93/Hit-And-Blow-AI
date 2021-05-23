@@ -5,6 +5,9 @@ Still need to improve"get_nexttry".
 =#
 using Combinatorics
 using Random
+using Statistics
+using Plots
+gr()
 
 #= Asks user for a guess at the solution, performs data validation
     Parameters:
@@ -84,9 +87,10 @@ function get_mode()
 			println("Mode: 1 -> Play against CPU")
 			println("Mode: 2 -> Play against CPU with CPU assist")
             println("Mode: 3 -> Manual play with CPU assist")
+            println("Mode: 4 -> Generate CPU Stats")
             print("Mode: ")
             g_mode = parse(Int, readline()) # User input for game mode
-            if g_mode > 3 || g_mode < 0 # If not in the right range
+            if g_mode > 4 || g_mode < 0 # If not in the right range
                 println("Not a valid game mode. Please select from the available modes.")
                 continue # Try again
             end # if
@@ -164,7 +168,6 @@ end
 
 function get_nexttry(all_poss, all_sols, atmp_size)
     num_poss = length(all_poss)
-    print("Thinking... ")
     if num_poss < 20 # Take all of them
         poss_select = copy(all_poss)
         # Plus a few extra random ones, to check full solution space more quickly.
@@ -256,6 +259,7 @@ while true
                 possible_solutions = find_possible(possible_solutions, attempt, hits, blows, guess_size)
                 num_poss = length(possible_solutions)
                 println("Possible solutions left: ", num_poss)
+                print("Thinking... ")
                 next_try = get_nexttry(possible_solutions, all_sols_array, guess_size)
                 println("Try ", next_try,".")
                 #= #Include for debugging
@@ -270,7 +274,6 @@ while true
             attmpt_num += 1
         end # while
     elseif game_mode == 3 # Manual mode
-        #println("Mode not yet implemented.")
         attmpt_num = 1
         possible_solutions = copy(all_sols_array)
         while true
@@ -316,6 +319,75 @@ while true
             # Continue to next attempt
             attmpt_num += 1
         end # while
+    elseif game_mode == 4 # CPU Stats
+        println("Mode not yet implemented.")
+        print("How many samples? ")
+        N_samp = parse(Int, readline()) # User input for game mode
+        # Run mode 0 N_samp times; track value of attmpt_num;
+        attmpt_samp = Vector{Int64}(); # Empty array for attmpt_num values
+        perc_set = 0;
+        for index in 1:N_samp
+
+            the_solution = all_sols_array[rand(1:length(all_sols_array))]
+            #println("The Solution: ", the_solution) # Include for debugging
+    
+            attmpt_num = 1 # Initial attempt number (first attempt)
+            possible_solutions = copy(all_sols_array)
+            while true
+                #=if attmpt_num > 8 # Fail condition
+                    println("Too many guesses. Sorry.")
+                    println("Actual solution: ", the_solution)
+                    break
+                end=#
+                if attmpt_num > 1
+                    attempt = get_nexttry(possible_solutions, all_sols_array, guess_size)
+                else
+                    attempt = possible_solutions[rand(1:length(possible_solutions))]
+                end
+                #println("Guess #", attmpt_num, ": ", attempt)
+                hits, blows = check_attempt(attempt, the_solution, guess_size)
+                #println("Hits: ", hits, "; Blows: ", blows)
+                if hits == guess_size # Win condition
+                    #println("Congratulations! You win!")
+                    push!(attmpt_samp, attmpt_num) # add attempt value
+                    break
+                end
+                possible_solutions = find_possible(possible_solutions, attempt, hits, blows, guess_size)
+                #num_poss = length(possible_solutions)
+                #println("Possible solutions left: ", num_poss)
+                attmpt_num += 1
+            end # while
+            perc = 100*(index-1)/N_samp;
+            if perc >= perc_set
+                while perc >= perc_set
+                    perc_set += 1;
+                end # while
+                print(perc_set)
+                println("% complete")
+            end
+            # Repeat trials specified number of times
+        end # for index
+        # Calculate Stats
+        attmpt_avg = mean(attmpt_samp)
+        attmpt_med = median(attmpt_samp)
+        attmpt_var = var(attmpt_samp; corrected = false)
+        println("Average: ", attmpt_avg)
+        println("Median: ", attmpt_med)
+        println("Variance: ", attmpt_var)
+        println("Stand. Dev.: ", sqrt(attmpt_var))
+        # Display data
+        local x1 = 1:10;
+        local yh = zeros(10,1);
+        for i1 in 1:length(attmpt_samp)
+            yh[attmpt_samp[i1]] += (1/length(attmpt_samp));
+        end
+        local myplot = plot(x1,yh, 
+            seriestype = :line, 
+            size = (400,500),
+            label=["Level ?"]
+        )
+        display(myplot)
+
     else # game_mode == 0
         println("This is a secret to everyone.")
         the_solution = all_sols_array[rand(1:length(all_sols_array))]
@@ -330,7 +402,8 @@ while true
                 break
             end
             if attmpt_num > 1
-                attempt = get_nexttry(possible_solutions,all_sols_array, guess_size)
+                print("Thinking... ")
+                attempt = get_nexttry(possible_solutions, all_sols_array, guess_size)
             else
                 attempt = possible_solutions[rand(1:length(possible_solutions))]
             end
