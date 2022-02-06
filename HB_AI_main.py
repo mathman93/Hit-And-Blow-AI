@@ -2,8 +2,6 @@
 A simple AI for playing Hit & Blow (Mastermind).
 Basic Idea: Create all possible solutions, and use attempts to
 reduce possible solutions down to just one.
-To Do:
-	- Reprogram in Julia
 By: Timothy Anglea
 '''
 
