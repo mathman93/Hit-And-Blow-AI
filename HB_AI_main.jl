@@ -7,7 +7,6 @@ using Combinatorics
 using Random
 using Statistics
 using Plots
-gr()
 
 #= Asks user for a guess at the solution, performs data validation
     Parameters:
@@ -320,7 +319,6 @@ while true
             attmpt_num += 1
         end # while
     elseif game_mode == 4 # CPU Stats
-        println("Mode not yet implemented.")
         print("How many samples? ")
         N_samp = parse(Int, readline()) # User input for game mode
         # Run mode 0 N_samp times; track value of attmpt_num;
